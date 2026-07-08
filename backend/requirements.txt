@@ -1,0 +1,46 @@
+# Version strategy: floor + ceiling, not exact pins, on every package with a
+# compiled/binary component (pydantic-core, bcrypt, psycopg2, numpy,
+# pandas). Exact-pinning those is what actually broke installation on
+# Python 3.14 here — an old exact pin has no prebuilt wheel for a Python
+# version released after it, forcing pip to compile from source (needing a
+# Rust or C toolchain the machine may not have) instead of just installing
+# cleanly. The floor lets pip resolve to a release that ships a 3.14 wheel;
+# the ceiling blocks an untested future major version from being pulled in
+# silently (pandas jumped 2.x -> 3.0 during this fix — safe here since it
+# was tested against this codebase, but that shouldn't happen unreviewed).
+# Pure-Python packages (fastapi, dotenv) are exact-pinned since they carry
+# no wheel-availability risk and benefit more from reproducibility.
+#
+# passlib was removed entirely: unmaintained since 2020, depends on the
+# stdlib `crypt` module (removed in Python 3.13+), and its bcrypt backend
+# is known to break against bcrypt>=4.1. Passwords are hashed directly
+# with bcrypt in app/security.py instead.
+
+
+# Web Framework & Server
+fastapi==0.115.6
+uvicorn[standard]>=0.32.0,<1
+python-multipart>=0.0.12,<1
+
+# Database Layer (SQLAlchemy + Postgres Drivers)
+sqlalchemy>=2.0.36,<3
+psycopg2-binary>=2.9.10,<3
+asyncpg>=0.30.0,<1
+
+# Validation & Settings
+pydantic[email]>=2.12.0,<3
+python-dotenv>=1.0.1,<2
+
+# Security & Authentication (Fixed Bcrypt-Passlib Crash)
+python-jose[cryptography]>=3.3.0,<4
+bcrypt>=3.2.0,<4.0.0
+
+# Data Processing & LLM Layer
+pandas>=2.3.3,<4
+numpy>=2.1.3,<3
+anthropic>=0.34.2,<1
+apscheduler>=3.10.4,<4
+
+# Local Development & Testing Suite
+pytest>=8.3.3
+httpx>=0.27.2

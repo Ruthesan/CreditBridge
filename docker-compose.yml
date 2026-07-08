@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=creditbridge
+      - POSTGRES_PASSWORD=creditbridge
+      - POSTGRES_DB=creditbridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creditbridge -d creditbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ENV=development
+      - LLM_MODE=${LLM_MODE:-mock}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DATABASE_URL=postgresql://creditbridge:creditbridge@db:5432/creditbridge
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me-in-production}
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:80
+    volumes:
+      - backend_data:/app/uploads
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend_data:
+  postgres_data:

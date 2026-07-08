@@ -1,0 +1,16 @@
+Date,Description,Amount
+2026-01-03,Sale to customer,60000
+2026-01-05,Supplier payment,-25000
+2026-01-10,Sale to customer,62000
+garbled entry,,???
+2026-01-20,Sale to customer,58000
+2026-02-01,,
+2026-02-03,Sale to customer,61000
+2026-02-05,Supplier payment,-26000
+2026-02-10,Sale to customer,63000
+n/a,unknown transaction,n/a
+2026-02-20,Sale to customer,59000
+05/03/2026,Ambiguous format sale,22000
+2026-03-03,Sale to customer,64000
+2026-03-05,Supplier payment,-27000
+2026-03-10,Sale to customer,65000

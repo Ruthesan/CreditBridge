@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+creditbridge.db
+test_creditbridge.db
+uploads/
+.env
+tests/
+.pytest_cache/
