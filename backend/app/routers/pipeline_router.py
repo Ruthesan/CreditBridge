@@ -1,7 +1,9 @@
+import asyncio
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, BackgroundTasks
 from sqlalchemy.orm import Session
+
 
 from app.config import settings
 from app.database import get_db
@@ -68,10 +70,10 @@ async def statement_uploaded(
     return {"run_id": run_id, "status": "pending", "poll_at": f"/pipeline/status/{run_id}"}
 
 
-async def _execute_and_persist(run_id: str, business_id: str, raw_text: str, trigger_type: str):
+def _execute_and_persist(run_id: str, business_id: str, raw_text: str, trigger_type: str):
     from app.database import SessionLocal
 
-    result = await run_pipeline(raw_text, business_id, trigger_type=trigger_type, run_id=run_id)
+    result = asyncio.run(run_pipeline(raw_text, business_id, trigger_type=trigger_type, run_id=run_id))
     db = SessionLocal()
     try:
         record = db.query(PipelineRunRecord).filter(PipelineRunRecord.run_id == run_id).first()
