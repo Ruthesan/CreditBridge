@@ -34,12 +34,13 @@ api.interceptors.request.use((config) => {
 });
 
 /**
- * The backend issues a single 7-day JWT with no refresh-token endpoint
+ * The backend issues a strict 10-minute JWT with no refresh-token endpoint
  * (see backend/app/config.py — ACCESS_TOKEN_EXPIRE_MINUTES, and DECISIONS.md).
  * There is nothing to silently refresh, so a 401 here means the session is
  * genuinely over: clear it and let ProtectedRoute bounce the user to /login,
  * preserving where they were headed.
  */
+
 let onUnauthorized: (() => void) | null = null;
 export function registerUnauthorizedHandler(fn: () => void) {
   onUnauthorized = fn;

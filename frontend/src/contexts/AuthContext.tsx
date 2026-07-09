@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useRef,
   type ReactNode,
 } from 'react';
 import type { UserOut } from '../types';
@@ -27,9 +28,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<'checking' | 'authenticated' | 'anonymous'>('checking');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Ref to track the inactivity countdown timer
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const logout = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    api.clearToken();
+    setUser(null);
+    setStatus('anonymous');
+  }, []);
+
+  // Function to reset the inactivity countdown clock (10 Minutes)
+  const resetInactivityTimer = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    
+    // 10 minutes * 60 seconds * 1000 milliseconds
+    timeoutRef.current = setTimeout(() => {
+      logout();
+    }, 10 * 60 * 1000);
+  }, [logout]);
+
+  // Unified Effect for Hydration, Inactivity Monitoring, and HTTP 401 Interception
   useEffect(() => {
     let cancelled = false;
+    
+    // Automatically handles token rejection if the backend expires it
     api.registerUnauthorizedHandler(() => {
       if (!cancelled) {
         setUser(null);
@@ -57,10 +81,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     hydrate();
+
+    // Setup interactive security tracking if user is logged in
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    
+    if (status === 'authenticated') {
+      resetInactivityTimer();
+      activityEvents.forEach(event => window.addEventListener(event, resetInactivityTimer));
+    }
+
     return () => {
       cancelled = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      activityEvents.forEach(event => window.removeEventListener(event, resetInactivityTimer));
     };
-  }, []);
+  }, [status, resetInactivityTimer]);
 
   const login = useCallback(async (email: string, password: string) => {
     setSubmitting(true);
@@ -92,12 +127,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setSubmitting(false);
     }
-  }, []);
-
-  const logout = useCallback(() => {
-    api.clearToken();
-    setUser(null);
-    setStatus('anonymous');
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

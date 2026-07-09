@@ -29,7 +29,9 @@ class Settings:
     # Auth
     JWT_SECRET: str = os.getenv("JWT_SECRET", "dev-secret-change-me-in-production")
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    # ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10  # Enforce 10-minute maximum session token duration
+
 
     # Uploads
     MAX_UPLOAD_BYTES: int = int(os.getenv("MAX_UPLOAD_BYTES", str(2 * 1024 * 1024)))  # 2 MB default
